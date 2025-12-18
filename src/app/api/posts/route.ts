@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         excerpt,
         category,
         tags: tags || [],
-        author: author || 'Bellingham Breaking News Staff',
+        author: (author && author !== 'undefined' && author !== 'undefined Staff') ? author : 'Bellingham Breaking News Team',
         featuredImage: featuredImage || null,
         imageAlt: imageAlt || null,
         isBreaking: isBreaking || false,
