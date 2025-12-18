@@ -24,11 +24,8 @@ export default function SubmitTipPage() {
         </div>
 
         <div className="mt-12 text-center text-sm text-gray-500">
-          <p className="mb-2">
-            <strong>Your privacy matters.</strong> We protect the identity of our sources.
-          </p>
           <p>
-            For urgent tips, call our news desk at <a href="tel:+13605551234" className="text-primary hover:underline">(360) 555-1234</a>
+            <strong>Your privacy matters.</strong> We protect the identity of our sources.
           </p>
         </div>
       </div>

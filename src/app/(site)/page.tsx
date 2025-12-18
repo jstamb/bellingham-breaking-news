@@ -80,7 +80,7 @@ export default async function HomePage() {
                   href={`/news/${featured.slug}`}
                   className="relative block group cursor-pointer overflow-hidden rounded-sm shadow-2xl mb-12"
                 >
-                  <div className="relative aspect-[21/9]">
+                  <div className="relative aspect-[4/3] md:aspect-[16/9] lg:aspect-[21/9]">
                     {featured.featuredImage ? (
                       <Image
                         src={featured.featuredImage}
@@ -94,16 +94,16 @@ export default async function HomePage() {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent"></div>
                   </div>
-                  <div className="absolute bottom-0 left-0 p-8 md:p-12 text-white w-full">
-                    <span className="bg-primary text-white text-[11px] font-black uppercase px-4 py-1.5 mb-6 inline-block tracking-[0.3em] shadow-lg">
+                  <div className="absolute bottom-0 left-0 p-4 sm:p-8 md:p-12 text-white w-full">
+                    <span className="bg-primary text-white text-[10px] sm:text-[11px] font-black uppercase px-3 sm:px-4 py-1 sm:py-1.5 mb-3 sm:mb-6 inline-block tracking-[0.2em] sm:tracking-[0.3em] shadow-lg">
                       {featured.isBreaking ? 'Breaking' : 'Lead Report'}
                     </span>
-                    <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold font-headline leading-[1.05] mb-8 group-hover:text-primary transition-colors">
+                    <h2 className="text-xl sm:text-3xl md:text-5xl lg:text-6xl font-bold font-headline leading-[1.1] mb-4 sm:mb-8 group-hover:text-primary transition-colors">
                       {featured.title}
                     </h2>
-                    <div className="flex items-center text-[11px] uppercase font-black tracking-[0.2em] gap-8 opacity-60">
-                      <span className="flex items-center gap-3">
-                        <div className="w-4 h-4 bg-primary rounded-full"></div>
+                    <div className="flex items-center text-[9px] sm:text-[11px] uppercase font-black tracking-[0.15em] sm:tracking-[0.2em] gap-4 sm:gap-8 opacity-60">
+                      <span className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 bg-primary rounded-full"></div>
                         {featured.author}
                       </span>
                       <span>{formatDate(featured.publishedAt)}</span>
