@@ -67,6 +67,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+
+    // Debug logging to see what's being received
+    console.log('[POST /api/posts] Received body keys:', Object.keys(body));
+    console.log('[POST /api/posts] Content length:', body.content?.length || 0);
+    console.log('[POST /api/posts] Excerpt length:', body.excerpt?.length || 0);
+    console.log('[POST /api/posts] Content preview:', body.content?.substring(0, 200));
+
     const { title, content, excerpt, category, tags, author, featuredImage, imageAlt, isBreaking, isPublished, metaTitle, metaDescription, publishedAt } = body;
 
     // Validate required fields
@@ -120,6 +127,11 @@ export async function POST(request: NextRequest) {
         id: post.id,
         slug: post.slug,
         url: `${siteUrl}/news/${post.slug}`,
+      },
+      debug: {
+        receivedContentLength: content?.length || 0,
+        receivedExcerptLength: excerpt?.length || 0,
+        receivedFields: Object.keys(body),
       },
     });
   } catch (error) {

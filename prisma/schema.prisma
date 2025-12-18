@@ -11,8 +11,8 @@ model Post {
   id              String    @id @default(cuid())
   slug            String    @unique
   title           String
-  excerpt         String
-  content         String
+  excerpt         String    @db.Text
+  content         String    @db.Text
   featuredImage   String?
   imageAlt        String?
   category        String
@@ -27,7 +27,7 @@ model Post {
 
   // SEO fields
   metaTitle       String?
-  metaDescription String?
+  metaDescription String?   @db.Text
   canonicalUrl    String?
 
   @@index([publishedAt(sort: Desc)])
