@@ -19,8 +19,30 @@ interface ArticleContentProps {
   post: Post;
 }
 
+function formatContent(content: string): string {
+  // Check if content already has HTML paragraph tags
+  if (content.includes('<p>') || content.includes('<p ')) {
+    return content;
+  }
+
+  // Convert \n\n (double newlines) to paragraph breaks
+  // and single \n to <br> tags
+  const paragraphs = content
+    .split(/\n\s*\n/) // Split on double newlines (with optional whitespace)
+    .map(para => para.trim())
+    .filter(para => para.length > 0)
+    .map(para => {
+      // Convert single newlines within paragraph to <br>
+      const withBreaks = para.replace(/\n/g, '<br>');
+      return `<p>${withBreaks}</p>`;
+    });
+
+  return paragraphs.join('\n');
+}
+
 export default function ArticleContent({ post }: ArticleContentProps) {
   const imageUrl = post.featuredImage || `https://picsum.photos/seed/${post.title}/1200/800`;
+  const formattedContent = formatContent(post.content);
 
   return (
     <article className="max-w-4xl mx-auto">
@@ -66,7 +88,7 @@ export default function ArticleContent({ post }: ArticleContentProps) {
       {/* Content */}
       <div
         className="prose prose-lg dark:prose-invert prose-headings:font-headline prose-a:text-cat-business max-w-none"
-        dangerouslySetInnerHTML={{ __html: post.content }}
+        dangerouslySetInnerHTML={{ __html: formattedContent }}
       />
 
       {/* Tags */}
