@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { validateApiKey } from '@/lib/api-auth';
 import { sendEmail } from '@/lib/email/send';
-import { morningBriefingTemplate } from '@/lib/email/templates';
+import { weeklyBriefingTemplate } from '@/lib/email/templates';
 
-// POST - Send morning briefing to all active subscribers (protected)
+// POST - Send weekly briefing to all active subscribers (protected)
+// Designed to be triggered every Friday at 7am PT via n8n or Cloud Scheduler
 export async function POST(request: NextRequest) {
   try {
     const apiKey = request.headers.get('X-API-Key');
@@ -16,31 +17,32 @@ export async function POST(request: NextRequest) {
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-    // Get today's top articles
+    // Get the week's top articles (last 7 days)
     const articles = await prisma.post.findMany({
       where: {
         isPublished: true,
         publishedAt: {
-          gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
+          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
         },
       },
       orderBy: [
         { isBreaking: 'desc' },
         { publishedAt: 'desc' },
       ],
-      take: 10,
+      take: 15, // More articles for weekly digest
       select: {
         title: true,
         excerpt: true,
         category: true,
         slug: true,
+        isBreaking: true,
       },
     });
 
     if (articles.length === 0) {
       return NextResponse.json({
         success: false,
-        message: 'No articles to send - no new content in the last 24 hours',
+        message: 'No articles to send - no new content in the last 7 days',
       });
     }
 
@@ -70,19 +72,23 @@ export async function POST(request: NextRequest) {
       excerpt: article.excerpt,
       category: article.category,
       url: `${siteUrl}/news/${article.slug}`,
+      isBreaking: article.isBreaking,
     }));
 
     // Send to each subscriber
     let sent = 0;
     let failed = 0;
 
+    // Format date for subject line (e.g., "Dec 20")
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
     for (const subscriber of subscribers) {
       const unsubscribeUrl = `${siteUrl}/api/newsletter/unsubscribe/${subscriber.unsubscribeToken}`;
-      const html = morningBriefingTemplate(articleData, unsubscribeUrl);
+      const html = weeklyBriefingTemplate(articleData, unsubscribeUrl);
 
       const result = await sendEmail({
         to: subscriber.email,
-        subject: `Morning Briefing - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+        subject: `Weekly Briefing - ${dateStr} | Bellingham Breaking News`,
         html,
       });
 
@@ -90,8 +96,8 @@ export async function POST(request: NextRequest) {
       await prisma.emailLog.create({
         data: {
           email: subscriber.email,
-          subject: `Morning Briefing`,
-          type: 'morning_briefing',
+          subject: `Weekly Briefing - ${dateStr}`,
+          type: 'weekly_briefing',
           status: result.success ? 'sent' : 'failed',
           messageId: result.messageId,
         },
@@ -122,9 +128,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Send briefing error:', error);
+    console.error('Send weekly briefing error:', error);
     return NextResponse.json(
-      { error: 'Failed to send morning briefing' },
+      { error: 'Failed to send weekly briefing' },
       { status: 500 }
     );
   }
