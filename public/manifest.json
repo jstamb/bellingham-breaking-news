@@ -1,0 +1,16 @@
+{
+  "name": "Bellingham Breaking News",
+  "short_name": "BBN",
+  "description": "Your trusted source for breaking Bellingham and Whatcom County news",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#003f87",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
