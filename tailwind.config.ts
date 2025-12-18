@@ -10,6 +10,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Main brand colors
+        primary: '#E63946',      // Red for "BREAKING" and accents
+        secondary: '#1a1a2e',    // Dark navy blue
+        accent: '#27C02F',       // Green accent
+        lightGray: '#f8f9fa',    // Light gray backgrounds
+        // Category colors
         'cat-local': '#4caf50',
         'cat-politics': '#d32f2f',
         'cat-police': '#1a237e',
@@ -19,13 +25,21 @@ const config: Config = {
         'cat-restaurants': '#e65100',
         'cat-waterfront': '#00838f',
         'cat-weather': '#ff9800',
-        'news-gray': '#f0f1f2',
-        'news-text': '#666666',
       },
       fontFamily: {
         sans: ['var(--font-roboto)', 'sans-serif'],
         headline: ['var(--font-roboto-condensed)', 'sans-serif'],
+        condensed: ['var(--font-roboto-condensed)', 'sans-serif'],
         serif: ['var(--font-pt-serif)', 'serif'],
+      },
+      keyframes: {
+        scroll: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(-150%)' },
+        },
+      },
+      animation: {
+        scroll: 'scroll 45s linear infinite',
       },
       typography: {
         DEFAULT: {
@@ -33,9 +47,9 @@ const config: Config = {
             maxWidth: 'none',
             color: 'inherit',
             a: {
-              color: '#2979ff',
+              color: '#E63946',
               '&:hover': {
-                color: '#1565c0',
+                color: '#c62c38',
               },
             },
           },
