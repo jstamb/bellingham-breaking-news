@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  title           String
+  excerpt         String
+  content         String
+  featuredImage   String?
+  imageAlt        String?
+  category        String
+  tags            String[]
+  author          String    @default("Bellingham Breaking News Staff")
+  isBreaking      Boolean   @default(false)
+  isPublished     Boolean   @default(true)
+  viewCount       Int       @default(0)
+  publishedAt     DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime  @default(now())
+
+  // SEO fields
+  metaTitle       String?
+  metaDescription String?
+  canonicalUrl    String?
+
+  @@index([publishedAt(sort: Desc)])
+  @@index([category])
+  @@index([isBreaking])
+  @@index([isPublished])
+}
+
+model ApiKey {
+  id        String    @id @default(cuid())
+  key       String    @unique
+  name      String
+  isActive  Boolean   @default(true)
+  lastUsed  DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Subscriber {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  firstName        String?
+  lastName         String?
+  isVerified       Boolean   @default(false)
+  isActive         Boolean   @default(true)
+  verifyToken      String?   @unique
+  unsubscribeToken String?   @unique
+  preferences      String[]  @default(["breaking", "weekly_digest"])
+  lastEmailSent    DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  email     String
+  subject   String
+  type      String   // welcome, verify, weekly_digest, breaking, contact
+  status    String   // sent, failed, bounced
+  messageId String?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([type])
+  @@index([createdAt(sort: Desc)])
+}
+
+model SitemapEntry {
+  id         String   @id @default(cuid())
+  url        String   @unique
+  lastmod    DateTime
+  changefreq String   @default("weekly")
+  priority   Float    @default(0.5)
+  createdAt  DateTime @default(now())
+}
+
+model LinkUsage {
+  id        String   @id @default(cuid())
+  domain    String   @unique
+  useCount  Int      @default(1)
+  lastUsed  DateTime @default(now())
+  createdAt DateTime @default(now())
+}
