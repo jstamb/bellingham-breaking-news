@@ -29,8 +29,9 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
           {/* Brand Section */}
           <div className="space-y-10">
-            <h1 className="text-4xl font-black uppercase tracking-tighter font-headline">
-              BBN <span className="text-primary italic">BREAKING</span>
+            <h1 className="text-3xl font-black uppercase tracking-tighter font-headline leading-none">
+              BELLINGHAM<br />
+              <span className="text-primary italic">BREAKING</span> NEWS
             </h1>
             <p className="text-gray-400 text-sm leading-relaxed font-serif italic">
               Independent, citizen-funded journalism for the City of Bellingham. We provide real-time reporting on the stories that define our community.
