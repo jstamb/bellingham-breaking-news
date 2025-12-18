@@ -1,17 +1,29 @@
-interface NewsTickerProps {
-  headlines?: string[];
+import Link from 'next/link';
+import prisma from '@/lib/prisma';
+
+async function getHeadlines() {
+  try {
+    const posts = await prisma.post.findMany({
+      where: { isPublished: true },
+      orderBy: { publishedAt: 'desc' },
+      take: 10,
+      select: {
+        slug: true,
+        title: true,
+      },
+    });
+    return posts;
+  } catch {
+    return [];
+  }
 }
 
-const defaultHeadlines = [
-  'Port of Bellingham Approves Waterfront Expansion',
-  'WWU Sustainability Fund Reaches New Milestone',
-  'Fairhaven Paving Project Enters Phase 2',
-  'Traffic Alert: I-5 Northbound Delay at Samish Exit',
-  'New Restaurant Opening on Holly Street',
-];
+export default async function NewsTicker() {
+  const headlines = await getHeadlines();
 
-export default function NewsTicker({ headlines = defaultHeadlines }: NewsTickerProps) {
-  const tickerText = headlines.map(h => `• ${h}`).join(' ');
+  if (headlines.length === 0) {
+    return null;
+  }
 
   return (
     <div className="bg-lightGray border-b border-gray-200 py-3 px-4 md:px-10 flex items-center gap-6">
@@ -19,9 +31,30 @@ export default function NewsTicker({ headlines = defaultHeadlines }: NewsTickerP
         Flash News
       </span>
       <div className="overflow-hidden flex-1 relative h-5">
-        <p className="absolute whitespace-nowrap animate-scroll text-[12px] font-bold text-secondary uppercase tracking-tight opacity-80">
-          {tickerText} {tickerText}
-        </p>
+        <div className="absolute whitespace-nowrap animate-scroll flex items-center gap-8">
+          {/* First set of headlines */}
+          {headlines.map((post) => (
+            <Link
+              key={post.slug}
+              href={`/news/${post.slug}`}
+              className="text-[12px] font-bold text-secondary uppercase tracking-tight opacity-80 hover:opacity-100 hover:text-primary transition-colors inline-flex items-center gap-2"
+            >
+              <span className="text-primary">&bull;</span>
+              {post.title}
+            </Link>
+          ))}
+          {/* Duplicate for seamless loop */}
+          {headlines.map((post) => (
+            <Link
+              key={`dup-${post.slug}`}
+              href={`/news/${post.slug}`}
+              className="text-[12px] font-bold text-secondary uppercase tracking-tight opacity-80 hover:opacity-100 hover:text-primary transition-colors inline-flex items-center gap-2"
+            >
+              <span className="text-primary">&bull;</span>
+              {post.title}
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );

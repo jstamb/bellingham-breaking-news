@@ -39,7 +39,7 @@ const config: Config = {
         },
       },
       animation: {
-        scroll: 'scroll 45s linear infinite',
+        scroll: 'scroll 120s linear infinite',
       },
       typography: {
         DEFAULT: {
