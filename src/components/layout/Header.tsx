@@ -1,22 +1,65 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, X, Search } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Menu, X, Search, Loader2, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
 
 const categories = [
   { name: 'Front Page', href: '/' },
-  { name: 'Fairhaven', href: '/category/fairhaven' },
-  { name: 'WWU Campus', href: '/category/wwu' },
-  { name: 'Waterfront', href: '/category/waterfront' },
-  { name: 'Whatcom Falls', href: '/category/whatcom-falls' },
+  { name: 'Local', href: '/category/local' },
+  { name: 'WWU', href: '/category/wwu' },
+  { name: 'Politics', href: '/category/politics' },
   { name: 'Business', href: '/category/business' },
+  { name: 'Restaurants', href: '/category/restaurants' },
+  { name: 'Sports', href: '/category/sports' },
+  { name: 'Weather', href: '/category/weather' },
+  { name: 'Waterfront', href: '/category/waterfront' },
   { name: 'Police & Fire', href: '/category/police-fire' },
 ];
 
 export default function Header() {
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [subscribeOpen, setSubscribeOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [subscribeStatus, setSubscribeStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [subscribeMessage, setSubscribeMessage] = useState('');
+
+  const isActiveCategory = (href: string) => {
+    if (href === '/') {
+      return pathname === '/';
+    }
+    return pathname.startsWith(href);
+  };
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubscribeStatus('loading');
+
+    try {
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSubscribeStatus('success');
+        setSubscribeMessage(data.message || 'Check your email to confirm!');
+        setEmail('');
+      } else {
+        setSubscribeStatus('error');
+        setSubscribeMessage(data.error || 'Something went wrong.');
+      }
+    } catch {
+      setSubscribeStatus('error');
+      setSubscribeMessage('Failed to subscribe. Please try again.');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
@@ -59,12 +102,12 @@ export default function Header() {
             <Search className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
             <span className="hidden sm:inline">Search</span>
           </button>
-          <Link
-            href="/support"
+          <button
+            onClick={() => setSubscribeOpen(true)}
             className="bg-primary hover:bg-secondary px-6 md:px-10 py-3 md:py-4 text-white font-black uppercase text-[11px] transition-all shadow-xl shadow-primary/20 tracking-[0.1em]"
           >
-            Support Local
-          </Link>
+            Subscribe
+          </button>
           {/* Mobile menu button */}
           <button
             className="lg:hidden p-2"
@@ -82,13 +125,13 @@ export default function Header() {
 
       {/* Navigation Bar */}
       <nav className="bg-white px-4 md:px-10 border-t border-gray-100 overflow-x-auto whitespace-nowrap scrollbar-hide">
-        <ul className="hidden lg:flex items-center justify-start gap-8 xl:gap-12 font-condensed font-black uppercase text-[12px] xl:text-[13px] tracking-[0.2em] xl:tracking-[0.25em] h-14 xl:h-16">
-          {categories.map((cat, index) => (
+        <ul className="hidden lg:flex items-center justify-start gap-6 xl:gap-10 font-condensed font-black uppercase text-[11px] xl:text-[12px] tracking-[0.15em] xl:tracking-[0.2em] h-14 xl:h-16">
+          {categories.map((cat) => (
             <li key={cat.name}>
               <Link
                 href={cat.href}
-                className={`h-full flex items-center transition-colors cursor-pointer ${
-                  index === 0
+                className={`h-full flex items-center transition-colors cursor-pointer pb-1 ${
+                  isActiveCategory(cat.href)
                     ? 'text-primary border-b-4 border-primary'
                     : 'text-secondary/60 hover:text-primary'
                 }`}
@@ -108,7 +151,11 @@ export default function Header() {
               <Link
                 key={cat.name}
                 href={cat.href}
-                className="px-4 py-3 text-sm font-black uppercase tracking-widest text-secondary hover:bg-lightGray hover:text-primary transition-colors"
+                className={`px-4 py-3 text-sm font-black uppercase tracking-widest transition-colors ${
+                  isActiveCategory(cat.href)
+                    ? 'text-primary bg-lightGray'
+                    : 'text-secondary hover:bg-lightGray hover:text-primary'
+                }`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {cat.name}
@@ -150,6 +197,90 @@ export default function Header() {
                   Search
                 </button>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subscribe Modal */}
+      {subscribeOpen && (
+        <div
+          className="fixed inset-0 bg-secondary/95 backdrop-blur-md z-[2000] flex items-center justify-center p-4"
+          onClick={() => {
+            setSubscribeOpen(false);
+            setSubscribeStatus('idle');
+            setSubscribeMessage('');
+          }}
+        >
+          <div
+            className="bg-white w-full max-w-md rounded shadow-2xl overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-secondary">
+              <h3 className="font-headline text-xl font-black text-white uppercase tracking-tighter">Subscribe</h3>
+              <button
+                onClick={() => {
+                  setSubscribeOpen(false);
+                  setSubscribeStatus('idle');
+                  setSubscribeMessage('');
+                }}
+                className="text-white/60 hover:text-white transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-8">
+              {subscribeStatus === 'success' ? (
+                <div className="text-center py-8">
+                  <CheckCircle className="w-16 h-16 text-accent mx-auto mb-4" />
+                  <h4 className="font-headline text-2xl font-bold text-secondary mb-2">You&apos;re Subscribed!</h4>
+                  <p className="text-gray-600">{subscribeMessage}</p>
+                  <button
+                    onClick={() => {
+                      setSubscribeOpen(false);
+                      setSubscribeStatus('idle');
+                    }}
+                    className="mt-6 bg-secondary text-white px-8 py-3 font-black uppercase text-xs tracking-widest hover:bg-primary transition"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <h4 className="font-headline text-2xl font-bold text-secondary mb-2">The Weekly Briefing</h4>
+                  <p className="text-gray-600 mb-6 font-serif">
+                    Get a curated summary of the week&apos;s top Bellingham stories delivered to your inbox every Friday at 7AM.
+                  </p>
+                  <form onSubmit={handleSubscribe} className="space-y-4">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email address"
+                      required
+                      disabled={subscribeStatus === 'loading'}
+                      className="w-full p-4 border-2 border-gray-200 focus:border-primary outline-none text-sm disabled:opacity-50"
+                    />
+                    <button
+                      type="submit"
+                      disabled={subscribeStatus === 'loading'}
+                      className="w-full bg-primary text-white py-4 font-black uppercase text-xs tracking-widest hover:bg-secondary transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {subscribeStatus === 'loading' ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        'Subscribe Now'
+                      )}
+                    </button>
+                  </form>
+                  {subscribeStatus === 'error' && (
+                    <p className="text-primary text-sm mt-4 text-center">{subscribeMessage}</p>
+                  )}
+                  <p className="text-[10px] text-gray-400 mt-4 text-center">
+                    By subscribing, you agree to receive our weekly newsletter. Unsubscribe anytime.
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>
