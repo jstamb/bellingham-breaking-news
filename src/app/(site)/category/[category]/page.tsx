@@ -10,27 +10,35 @@ interface PageProps {
 }
 
 async function getCategoryPosts(category: string) {
-  return prisma.post.findMany({
-    where: {
-      isPublished: true,
-      category: { equals: category, mode: 'insensitive' },
-    },
-    orderBy: { publishedAt: 'desc' },
-    select: {
-      slug: true,
-      title: true,
-      excerpt: true,
-      featuredImage: true,
-      imageAlt: true,
-      category: true,
-      author: true,
-      isBreaking: true,
-      publishedAt: true,
-    },
-  });
+  try {
+    return await prisma.post.findMany({
+      where: {
+        isPublished: true,
+        category: { equals: category, mode: 'insensitive' },
+      },
+      orderBy: { publishedAt: 'desc' },
+      select: {
+        slug: true,
+        title: true,
+        excerpt: true,
+        featuredImage: true,
+        imageAlt: true,
+        category: true,
+        author: true,
+        isBreaking: true,
+        publishedAt: true,
+      },
+    });
+  } catch {
+    return [];
+  }
 }
 
 function formatCategoryName(category: string): string {
+  // Handle special cases like "police-fire"
+  if (category.toLowerCase() === 'police-fire') {
+    return 'Police & Fire';
+  }
   return category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
 }
 

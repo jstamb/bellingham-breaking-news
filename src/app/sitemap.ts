@@ -7,18 +7,7 @@ export const revalidate = 0;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bellinghambreakingnews.com';
 
-  // Get all published posts
-  const posts = await prisma.post.findMany({
-    where: { isPublished: true },
-    orderBy: { publishedAt: 'desc' },
-    select: {
-      slug: true,
-      updatedAt: true,
-      category: true,
-    },
-  });
-
-  // Static pages
+  // Static pages (always included)
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: siteUrl,
@@ -39,6 +28,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     },
   ];
+
+  // Try to get posts from database
+  let posts: { slug: string; updatedAt: Date; category: string }[] = [];
+  try {
+    posts = await prisma.post.findMany({
+      where: { isPublished: true },
+      orderBy: { publishedAt: 'desc' },
+      select: {
+        slug: true,
+        updatedAt: true,
+        category: true,
+      },
+    });
+  } catch {
+    // Database not available during build, return only static pages
+    return staticPages;
+  }
 
   // Category pages
   const categories = [...new Set(posts.map((p) => p.category.toLowerCase()))];

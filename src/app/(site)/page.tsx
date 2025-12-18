@@ -5,45 +5,65 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-async function getLatestPosts(limit: number = 10) {
-  return prisma.post.findMany({
-    where: { isPublished: true },
-    orderBy: { publishedAt: 'desc' },
-    take: limit,
-    select: {
-      slug: true,
-      title: true,
-      excerpt: true,
-      featuredImage: true,
-      imageAlt: true,
-      category: true,
-      author: true,
-      isBreaking: true,
-      publishedAt: true,
-    },
-  });
+type Post = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  featuredImage: string | null;
+  imageAlt: string | null;
+  category: string;
+  author: string;
+  isBreaking: boolean;
+  publishedAt: Date;
+};
+
+async function getLatestPosts(limit: number = 10): Promise<Post[]> {
+  try {
+    return await prisma.post.findMany({
+      where: { isPublished: true },
+      orderBy: { publishedAt: 'desc' },
+      take: limit,
+      select: {
+        slug: true,
+        title: true,
+        excerpt: true,
+        featuredImage: true,
+        imageAlt: true,
+        category: true,
+        author: true,
+        isBreaking: true,
+        publishedAt: true,
+      },
+    });
+  } catch {
+    return [];
+  }
 }
 
-async function getCategoryPosts(category: string, limit: number = 4) {
-  return prisma.post.findMany({
-    where: {
-      isPublished: true,
-      category: { equals: category, mode: 'insensitive' },
-    },
-    orderBy: { publishedAt: 'desc' },
-    take: limit,
-    select: {
-      slug: true,
-      title: true,
-      excerpt: true,
-      featuredImage: true,
-      imageAlt: true,
-      category: true,
-      author: true,
-      isBreaking: true,
-      publishedAt: true,
-    },
-  });
+async function getCategoryPosts(category: string, limit: number = 4): Promise<Post[]> {
+  try {
+    return await prisma.post.findMany({
+      where: {
+        isPublished: true,
+        category: { equals: category, mode: 'insensitive' },
+      },
+      orderBy: { publishedAt: 'desc' },
+      take: limit,
+      select: {
+        slug: true,
+        title: true,
+        excerpt: true,
+        featuredImage: true,
+        imageAlt: true,
+        category: true,
+        author: true,
+        isBreaking: true,
+        publishedAt: true,
+      },
+    });
+  } catch {
+    return [];
+  }
 }
 
 export default async function HomePage() {

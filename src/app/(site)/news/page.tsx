@@ -11,21 +11,25 @@ export const metadata: Metadata = {
 };
 
 async function getAllPosts() {
-  return prisma.post.findMany({
-    where: { isPublished: true },
-    orderBy: { publishedAt: 'desc' },
-    select: {
-      slug: true,
-      title: true,
-      excerpt: true,
-      featuredImage: true,
-      imageAlt: true,
-      category: true,
-      author: true,
-      isBreaking: true,
-      publishedAt: true,
-    },
-  });
+  try {
+    return await prisma.post.findMany({
+      where: { isPublished: true },
+      orderBy: { publishedAt: 'desc' },
+      select: {
+        slug: true,
+        title: true,
+        excerpt: true,
+        featuredImage: true,
+        imageAlt: true,
+        category: true,
+        author: true,
+        isBreaking: true,
+        publishedAt: true,
+      },
+    });
+  } catch {
+    return [];
+  }
 }
 
 export default async function NewsPage() {

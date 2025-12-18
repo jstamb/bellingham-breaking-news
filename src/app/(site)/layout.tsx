@@ -3,19 +3,26 @@ import Footer from '@/components/layout/Footer';
 import BreakingNewsBanner from '@/components/news/BreakingNewsBanner';
 import prisma from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 async function getBreakingNews() {
-  const breaking = await prisma.post.findFirst({
-    where: {
-      isPublished: true,
-      isBreaking: true,
-    },
-    orderBy: { publishedAt: 'desc' },
-    select: {
-      slug: true,
-      title: true,
-    },
-  });
-  return breaking;
+  try {
+    const breaking = await prisma.post.findFirst({
+      where: {
+        isPublished: true,
+        isBreaking: true,
+      },
+      orderBy: { publishedAt: 'desc' },
+      select: {
+        slug: true,
+        title: true,
+      },
+    });
+    return breaking;
+  } catch {
+    // Database not available during build
+    return null;
+  }
 }
 
 export default async function SiteLayout({

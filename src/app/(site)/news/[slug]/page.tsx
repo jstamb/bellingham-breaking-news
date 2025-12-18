@@ -14,33 +14,41 @@ interface PageProps {
 }
 
 async function getPost(slug: string) {
-  const post = await prisma.post.findUnique({
-    where: { slug },
-  });
-  return post;
+  try {
+    const post = await prisma.post.findUnique({
+      where: { slug },
+    });
+    return post;
+  } catch {
+    return null;
+  }
 }
 
 async function getRelatedPosts(category: string, excludeSlug: string) {
-  return prisma.post.findMany({
-    where: {
-      isPublished: true,
-      category: { equals: category, mode: 'insensitive' },
-      slug: { not: excludeSlug },
-    },
-    orderBy: { publishedAt: 'desc' },
-    take: 3,
-    select: {
-      slug: true,
-      title: true,
-      excerpt: true,
-      featuredImage: true,
-      imageAlt: true,
-      category: true,
-      author: true,
-      isBreaking: true,
-      publishedAt: true,
-    },
-  });
+  try {
+    return await prisma.post.findMany({
+      where: {
+        isPublished: true,
+        category: { equals: category, mode: 'insensitive' },
+        slug: { not: excludeSlug },
+      },
+      orderBy: { publishedAt: 'desc' },
+      take: 3,
+      select: {
+        slug: true,
+        title: true,
+        excerpt: true,
+        featuredImage: true,
+        imageAlt: true,
+        category: true,
+        author: true,
+        isBreaking: true,
+        publishedAt: true,
+      },
+    });
+  } catch {
+    return [];
+  }
 }
 
 async function incrementViewCount(slug: string) {
@@ -64,7 +72,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bellinghambreakingnews.com';
-  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Bellingham Breaking News';
 
   return {
     title: post.metaTitle || post.title,
@@ -113,7 +120,6 @@ export default async function ArticlePage({ params }: PageProps) {
   const relatedPosts = await getRelatedPosts(post.category, post.slug);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bellinghambreakingnews.com';
-  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Bellingham Breaking News';
   const articleUrl = `${siteUrl}/news/${post.slug}`;
 
   return (
