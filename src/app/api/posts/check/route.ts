@@ -13,6 +13,8 @@ const STOP_WORDS = new Set([
   'when', 'why', 'how', 'all', 'each', 'every', 'both', 'few', 'more',
   'most', 'other', 'some', 'such', 'no', 'not', 'only', 'own', 'same',
   'than', 'too', 'very', 'just', 'also', 'now', 'new', 'says', 'said',
+  'after', 'over', 'into', 'about', 'bellingham', 'whatcom', 'county',
+  'city', 'wa', 'washington', 'local', 'area', 'news',
 ]);
 
 function extractKeywords(text: string): Set<string> {
@@ -20,14 +22,20 @@ function extractKeywords(text: string): Set<string> {
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, '')
     .split(/\s+/)
-    .filter((word) => word.length > 2 && !STOP_WORDS.has(word));
+    .filter((word) => word.length > 3 && !STOP_WORDS.has(word));
   return new Set(words);
 }
 
 function jaccardSimilarity(set1: Set<string>, set2: Set<string>): number {
-  const intersection = new Set([...set1].filter((x) => set2.has(x)));
-  const union = new Set([...set1, ...set2]);
-  return union.size === 0 ? 0 : intersection.size / union.size;
+  if (set1.size === 0 || set2.size === 0) return 0;
+
+  let intersection = 0;
+  for (const word of set1) {
+    if (set2.has(word)) intersection++;
+  }
+
+  const union = set1.size + set2.size - intersection;
+  return union > 0 ? intersection / union : 0;
 }
 
 // POST - Check for duplicate/similar articles
@@ -41,55 +49,70 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, content, threshold = 0.4 } = body;
+    const { title, hours = 168, threshold = 0.4 } = body;
 
-    if (!title && !content) {
-      return NextResponse.json(
-        { error: 'Provide title or content to check' },
-        { status: 400 }
-      );
+    if (!title) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
 
-    const inputText = `${title || ''} ${content || ''}`;
-    const inputKeywords = extractKeywords(inputText);
+    // Get posts from the last N hours
+    const since = new Date(Date.now() - hours * 60 * 60 * 1000);
 
-    // Get recent posts to compare against
     const recentPosts = await prisma.post.findMany({
-      where: { isPublished: true },
-      orderBy: { publishedAt: 'desc' },
-      take: 100,
+      where: {
+        createdAt: { gte: since }
+      },
       select: {
         id: true,
-        slug: true,
         title: true,
-        excerpt: true,
-        publishedAt: true,
+        slug: true,
+        createdAt: true
       },
+      orderBy: { createdAt: 'desc' }
     });
 
-    const matches = recentPosts
-      .map((post) => {
-        const postText = `${post.title} ${post.excerpt}`;
-        const postKeywords = extractKeywords(postText);
-        const similarity = jaccardSimilarity(inputKeywords, postKeywords);
-        const sharedKeywords = [...inputKeywords].filter((k) => postKeywords.has(k));
-        return {
-          ...post,
-          similarity: Math.round(similarity * 100) / 100,
-          sharedKeywords,
+    const inputKeywords = extractKeywords(title);
+
+    // Check for duplicates
+    let isDuplicate = false;
+    let bestMatch: {
+      id: string;
+      title: string;
+      slug: string;
+      similarity: number;
+    } | null = null;
+    let highestSimilarity = 0;
+
+    for (const post of recentPosts) {
+      const postKeywords = extractKeywords(post.title);
+      const similarity = jaccardSimilarity(inputKeywords, postKeywords);
+
+      if (similarity > highestSimilarity) {
+        highestSimilarity = similarity;
+        bestMatch = {
+          id: post.id,
+          title: post.title,
+          slug: post.slug,
+          similarity: Math.round(similarity * 100)
         };
-      })
-      .filter((match) => match.similarity >= threshold)
-      .sort((a, b) => b.similarity - a.similarity)
-      .slice(0, 5);
+      }
+
+      if (similarity >= threshold) {
+        isDuplicate = true;
+        break;
+      }
+    }
 
     return NextResponse.json({
-      isDuplicate: matches.length > 0 && matches[0].similarity >= 0.6,
-      matches,
-      threshold,
+      isDuplicate,
+      similarity: Math.round(highestSimilarity * 100),
+      threshold: Math.round(threshold * 100),
+      bestMatch: isDuplicate ? bestMatch : null,
+      checkedPosts: recentPosts.length
     });
+
   } catch (error) {
-    console.error('Error checking duplicates:', error);
-    return NextResponse.json({ error: 'Failed to check duplicates' }, { status: 500 });
+    console.error('Duplicate check error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
