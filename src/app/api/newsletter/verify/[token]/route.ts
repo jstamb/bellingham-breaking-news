@@ -3,10 +3,8 @@ import prisma from '@/lib/prisma';
 import { sendEmail } from '@/lib/email/send';
 import { verificationConfirmedTemplate } from '@/lib/email/templates';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { token: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   try {
     const subscriber = await prisma.subscriber.findUnique({
       where: { verifyToken: params.token },

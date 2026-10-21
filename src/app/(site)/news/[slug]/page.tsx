@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 async function getPost(slug: string) {
@@ -62,7 +62,8 @@ async function incrementViewCount(slug: string) {
   }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const params = await props.params;
   const post = await getPost(params.slug);
 
   if (!post) {
@@ -107,7 +108,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function ArticlePage({ params }: PageProps) {
+export default async function ArticlePage(props: PageProps) {
+  const params = await props.params;
   const post = await getPost(params.slug);
 
   if (!post || !post.isPublished) {

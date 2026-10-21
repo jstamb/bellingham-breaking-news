@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 interface PageProps {
-  params: { category: string };
+  params: Promise<{ category: string }>;
 }
 
 async function getCategoryPosts(category: string) {
@@ -42,7 +42,8 @@ function formatCategoryName(category: string): string {
   return category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const params = await props.params;
   const categoryName = formatCategoryName(params.category);
 
   return {
@@ -55,7 +56,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function CategoryPage({ params }: PageProps) {
+export default async function CategoryPage(props: PageProps) {
+  const params = await props.params;
   const posts = await getCategoryPosts(params.category);
   const categoryName = formatCategoryName(params.category);
 

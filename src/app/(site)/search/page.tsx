@@ -6,10 +6,11 @@ import Image from 'next/image';
 export const dynamic = 'force-dynamic';
 
 interface SearchPageProps {
-  searchParams: { q?: string };
+  searchParams: Promise<{ q?: string }>;
 }
 
-export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
+export async function generateMetadata(props: SearchPageProps): Promise<Metadata> {
+  const searchParams = await props.searchParams;
   const query = searchParams.q || '';
   return {
     title: query ? `Search: ${query}` : 'Search',
@@ -60,7 +61,8 @@ function formatDate(date: Date): string {
   });
 }
 
-export default async function SearchPage({ searchParams }: SearchPageProps) {
+export default async function SearchPage(props: SearchPageProps) {
+  const searchParams = await props.searchParams;
   const query = searchParams.q || '';
   const results = await searchPosts(query);
 

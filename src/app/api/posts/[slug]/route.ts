@@ -4,10 +4,8 @@ import prisma from '@/lib/prisma';
 import { validateApiKey } from '@/lib/api-auth';
 
 // GET - Fetch single post (public)
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     const post = await prisma.post.findUnique({
       where: { slug: params.slug },
@@ -25,10 +23,8 @@ export async function GET(
 }
 
 // PATCH - Update post (requires API key)
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function PATCH(request: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     const apiKey = request.headers.get('X-API-Key');
     const isValid = await validateApiKey(apiKey);
@@ -78,10 +74,8 @@ export async function PATCH(
 }
 
 // DELETE - Delete post (requires API key)
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     const apiKey = request.headers.get('X-API-Key');
     const isValid = await validateApiKey(apiKey);
